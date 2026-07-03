@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsString, IsNotEmpty,IsNumber, IsDateString } from 'class-validator';
+import { IsString, IsNotEmpty,IsNumber, IsDateString, Min } from 'class-validator';
 
 export class CreateEventDto {
   @IsString()
@@ -20,4 +20,8 @@ export class CreateEventDto {
   @Type(() => Number)
   @IsNumber()
   maxSeats: number;
+
+  @IsNumber()
+  @Min(1)
+  price: number;
 }

@@ -8,6 +8,9 @@ import { BookingsModule } from './bookings/bookings.module';
 import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import { PaymentService } from './payment/payment.service';
+import { PaymentController } from './payment/payment.controller';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -16,9 +19,10 @@ import { AuthModule } from './auth/auth.module';
     EventsModule,
     BookingsModule,
     PrismaModule,
-    AuthModule
+    AuthModule,
+    PaymentModule
   ],
-  controllers: [AppController],
-  providers: [AppService, PrismaService],
+  controllers: [AppController, PaymentController],
+  providers: [AppService, PrismaService, PaymentService],
 })
 export class AppModule {}

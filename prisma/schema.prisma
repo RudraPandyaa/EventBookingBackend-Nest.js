@@ -15,6 +15,8 @@ model Event {
   location    String
   maxSeats    Int
   imageUrl    String?  
+  price       Int       @default(0) // store in smallest currency unit (for INR)
+
   bookings    Booking[]
 }
 
@@ -26,10 +28,21 @@ model Booking {
   event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  paymentStatus PaymentStatus @default(PENDING)
+  razorpayOrderId   String? @unique
+  razorpayPaymentId String?
+
   createdAt DateTime @default(now())
 
   @@unique([eventId, userId]) // one booking per user per event
 }
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
 
 model User {
   id        String    @id @default(uuid())
