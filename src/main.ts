@@ -1,34 +1,26 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { NestExpressApplication } from '@nestjs/platform-express';
-import { join } from 'path';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AppModule } from './app.module';
+
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create(AppModule);
+
+  app.useGlobalPipes(
+    new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
+  );
+  app.enableCors();
 
   const config = new DocumentBuilder()
-    .setTitle('Event Booking API')
-    .setDescription('API for booking events')
+    .setTitle('Event Booking System API')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true, // removes extra fields
-      forbidNonWhitelisted: true, // throws error for unknown fields
-      transform: true, // auto transform types
-    }),
-  );
+  SwaggerModule.setup('api-docs', app, document);
 
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads/',
-  });
-  await app.listen(3000);
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`🚀 Server running on port ${port}`);
 }
 bootstrap();
