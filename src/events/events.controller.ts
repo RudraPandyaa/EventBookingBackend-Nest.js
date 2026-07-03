@@ -12,7 +12,8 @@ import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-
+import * as os from 'os';
+import * as path from 'path';
 @Controller('events')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
@@ -24,7 +25,7 @@ export class EventsController {
     @UseInterceptors(
       FileInterceptor('image', {
         storage: diskStorage({
-          destination: './uploads',
+          destination: path.join(os.tmpdir(), 'uploads'), // /tmp/uploads on Vercel, writable
           filename: (req, file, cb) => {
             const uniqueName = Date.now() + '-' + file.originalname;
             cb(null, uniqueName);
