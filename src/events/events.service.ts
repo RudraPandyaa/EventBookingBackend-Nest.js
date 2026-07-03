@@ -1,11 +1,11 @@
-import { Injectable, NotFoundException  } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateEventDto } from './dto/update-event.dto';
 
 @Injectable()
 export class EventsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(createEventDto: CreateEventDto, file: Express.Multer.File) {
     return this.prisma.event.create({
@@ -18,85 +18,96 @@ export class EventsService {
     });
   }
 
-  async findAll(page?: string, limit?: string, location?: string) {
-    const pageNumber = Math.max(parseInt(page || '1'), 1);
-    const limitNumber = Math.max(parseInt(limit || '10'), 1);
+  async findAll(page?: string, limit?: string, location?: string, search?: string) {
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 10;
 
-    const skip = (pageNumber - 1) * limitNumber;
+    const where: any = {};
 
-    const where = {
-      location: location || undefined,
-    };
+    if (location) {
+      where.location = { contains: location, mode: 'insensitive' };
+    }
 
-    const events = await this.prisma.event.findMany({
-      where,
-      skip,
-      take: limitNumber,
-    });
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { location: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
-    const total = await this.prisma.event.count({ where });
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.event.findMany({
+        where,
+        skip: (pageNum - 1) * limitNum,
+        take: limitNum,
+        orderBy: { date: 'asc' },
+      }),
+      this.prisma.event.count({ where }),
+    ]);
 
     return {
+      data,
       total,
-      page: pageNumber,
-      limit: limitNumber,
-      data: events,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
     };
   }
 
   async findOne(id: string) {
-      const event = await this.prisma.event.findUnique({
-        where: { id },
-        include: {
-          bookings: true,
-        },
-      });
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      include: {
+        bookings: true,
+      },
+    });
 
-      if (!event) {
-        throw new NotFoundException('Event not found');
-      }
-
-      return event;
+    if (!event) {
+      throw new NotFoundException('Event not found');
     }
 
+    return event;
+  }
+
   async getStats(location?: string) {
-      const where = location ? { location } : undefined;
+    const where = location ? { location } : undefined;
 
-      const events = await this.prisma.event.findMany({
-        where,
-        include: { _count: { select: { bookings: true } } },
-      });
+    const events = await this.prisma.event.findMany({
+      where,
+      include: { _count: { select: { bookings: true } } },
+    });
 
-      const totalEvents = events.length;
-      const totalBookings = events.reduce((sum, e) => sum + e._count.bookings, 0);
+    const totalEvents = events.length;
+    const totalBookings = events.reduce((sum, e) => sum + e._count.bookings, 0);
 
-      const perEvent = events.map((e) => ({
-        eventId: e.id,
-        title: e.title,
-        location: e.location,
-        maxSeats: e.maxSeats,
-        bookedSeats: e._count.bookings,
-        seatsRemaining: e.maxSeats - e._count.bookings,
-      }));
+    const perEvent = events.map((e) => ({
+      eventId: e.id,
+      title: e.title,
+      location: e.location,
+      maxSeats: e.maxSeats,
+      bookedSeats: e._count.bookings,
+      seatsRemaining: e.maxSeats - e._count.bookings,
+    }));
 
-      // Group totals by location too, so you can see all locations at a glance
-      const byLocation = events.reduce((acc, e) => {
-        if (!acc[e.location]) {
-          acc[e.location] = { totalEvents: 0, totalBookings: 0, totalSeats: 0 };
-        }
-        acc[e.location].totalEvents += 1;
-        acc[e.location].totalBookings += e._count.bookings;
-        acc[e.location].totalSeats += e.maxSeats;
-        return acc;
-      }, {} as Record<string, { totalEvents: number; totalBookings: number; totalSeats: number }>);
+    // Group totals by location too, so you can see all locations at a glance
+    const byLocation = events.reduce((acc, e) => {
+      if (!acc[e.location]) {
+        acc[e.location] = { totalEvents: 0, totalBookings: 0, totalSeats: 0 };
+      }
+      acc[e.location].totalEvents += 1;
+      acc[e.location].totalBookings += e._count.bookings;
+      acc[e.location].totalSeats += e.maxSeats;
+      return acc;
+    }, {} as Record<string, { totalEvents: number; totalBookings: number; totalSeats: number }>);
 
-      return {
-        totalEvents,
-        totalBookings,
-        filteredByLocation: location || null,
-        byLocation,
-        events: perEvent,
-      };
+    return {
+      totalEvents,
+      totalBookings,
+      filteredByLocation: location || null,
+      byLocation,
+      events: perEvent,
+    };
   }
 
   async updateEvent(id: string, data: UpdateEventDto) {
@@ -122,7 +133,7 @@ export class EventsService {
     return this.prisma.event.delete({ where: { id } });
   }
 
-  
+
   async searchEvents(query: string) {
     if (!query) {
       throw new Error('Search query is required');

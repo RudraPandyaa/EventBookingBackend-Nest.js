@@ -55,12 +55,14 @@ export class EventsController {
   @ApiQuery({ name: 'page', required: false, example: '1' })
   @ApiQuery({ name: 'limit', required: false, example: '10' })
   @ApiQuery({ name: 'location', required: false, example: 'Ahmedabad' })
+  @ApiQuery({ name: 'search', required: false, example: 'CWC27' })
   getEvents(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('location') location?: string,
+    @Query('search') search?: string,
   ) {
-    return this.eventsService.findAll(page, limit, location);
+    return this.eventsService.findAll(page, limit, location, search);
   }
 
   @Get('stats')
