@@ -14,6 +14,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import * as os from 'os';
 import * as path from 'path';
+import { cloudinaryStorage } from '../cloudinary/cloudinary.storage';
 @Controller('events')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
