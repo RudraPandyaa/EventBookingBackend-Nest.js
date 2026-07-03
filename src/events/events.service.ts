@@ -13,8 +13,7 @@ export class EventsService {
         ...createEventDto,
         date: new Date(createEventDto.date),
 
-        // 🔥 THIS IS WHAT YOU MISSED
-        imageUrl: file ? `/uploads/${file.filename}` : null,
+        imageUrl: file ? (file as any).path : null, // Cloudinary puts the full URL in `path`
       },
     });
   }

@@ -23,16 +23,7 @@ export class EventsController {
     @ApiBearerAuth()
     @Post()
     @UseInterceptors(
-      FileInterceptor('image', {
-        storage: diskStorage({
-          destination: path.join(os.tmpdir(), 'uploads'), // /tmp/uploads on Vercel, writable
-          filename: (req, file, cb) => {
-            const uniqueName = Date.now() + '-' + file.originalname;
-            cb(null, uniqueName);
-          },
-        }),
-      }),
-    )
+      FileInterceptor('image', { storage: cloudinaryStorage }))
     @ApiConsumes('multipart/form-data')
     @ApiBody({
       schema: {
