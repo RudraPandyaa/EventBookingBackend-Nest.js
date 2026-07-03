@@ -24,7 +24,7 @@ export class AuthService {
       data: { username: dto.username, email: dto.email, password: hashedPassword },
     });
 
-    return this.issueTokens(user.id, user.email);
+    return this.issueTokens(user.id, user.email, user.role);
   }
 
   async login(dto: LoginDto) {
@@ -38,7 +38,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.issueTokens(user.id, user.email);
+    return this.issueTokens(user.id, user.email, user.role);
   }
 
   async refresh(userId: string, incomingRefreshToken: string) {
@@ -52,7 +52,7 @@ export class AuthService {
       throw new ForbiddenException('Access denied');
     }
 
-    return this.issueTokens(user.id, user.email);
+    return this.issueTokens(user.id, user.email, user.role);
   }
 
   async logout(userId: string) {
@@ -63,8 +63,8 @@ export class AuthService {
     return { message: 'Logged out successfully' };
   }
 
-  private async issueTokens(userId: string, email: string) {
-    const payload = { sub: userId, email };
+  private async issueTokens(userId: string, email: string, role: string) {
+    const payload = { sub: userId, email, role };
 
     const accessToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_SECRET,

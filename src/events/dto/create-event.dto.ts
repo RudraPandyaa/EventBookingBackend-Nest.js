@@ -21,6 +21,7 @@ export class CreateEventDto {
   @IsNumber()
   maxSeats: number;
 
+  @Type(() => Number)
   @IsNumber()
   @Min(1)
   price: number;
