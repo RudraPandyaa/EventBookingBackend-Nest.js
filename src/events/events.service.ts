@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -8,12 +8,19 @@ export class EventsService {
   constructor(private prisma: PrismaService) { }
 
   async create(createEventDto: CreateEventDto, file: Express.Multer.File) {
+    const date = new Date(createEventDto.date);
+
+    if (isNaN(date.getTime())) {
+      throw new BadRequestException('Invalid date');
+    }
+
     return this.prisma.event.create({
       data: {
         ...createEventDto,
-        date: new Date(createEventDto.date),
-
-        imageUrl: file ? (file as any).path : null, // Cloudinary puts the full URL in `path`
+        date,
+        imageUrl: file
+          ? (file as any).secure_url || file.path
+          : null,
       },
     });
   }
