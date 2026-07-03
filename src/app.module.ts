@@ -18,7 +18,7 @@ import { PaymentModule } from './payment/payment.module';
     BookingsModule,
     PrismaModule,
     AuthModule,
-    PaymentModule
+    PaymentModule,
   ],
   controllers: [AppController, PaymentController],
   providers: [AppService, PrismaService, PaymentService],

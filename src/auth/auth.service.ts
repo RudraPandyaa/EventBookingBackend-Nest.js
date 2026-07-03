@@ -1,4 +1,9 @@
-import { Injectable, ConflictException, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 
@@ -14,23 +19,33 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const existing = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
     if (existing) {
       throw new ConflictException('Email already registered');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const role = dto.adminSecret === process.env.ADMIN_SECRET_KEY ? 'ADMIN' : 'USER';
+    const role =
+      dto.adminSecret === process.env.ADMIN_SECRET_KEY ? 'ADMIN' : 'USER';
 
     const user = await this.prisma.user.create({
-      data: { username: dto.username, email: dto.email, password: hashedPassword, role },
+      data: {
+        username: dto.username,
+        email: dto.email,
+        password: hashedPassword,
+        role,
+      },
     });
 
     return this.issueTokens(user.id, user.email, user.role);
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -49,7 +64,10 @@ export class AuthService {
       throw new ForbiddenException('Access denied');
     }
 
-    const tokenMatches = await bcrypt.compare(incomingRefreshToken, user.refreshToken);
+    const tokenMatches = await bcrypt.compare(
+      incomingRefreshToken,
+      user.refreshToken,
+    );
     if (!tokenMatches) {
       throw new ForbiddenException('Access denied');
     }

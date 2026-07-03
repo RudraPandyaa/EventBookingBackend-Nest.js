@@ -5,7 +5,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { CloudinaryProvider } from '../cloudinary/cloudinary.provider';
 
 @Module({
-  imports: [PrismaModule], 
+  imports: [PrismaModule],
   controllers: [EventsController],
   providers: [EventsService, CloudinaryProvider],
   exports: [EventsService],
