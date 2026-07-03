@@ -1,8 +1,10 @@
-import { Controller, Post, Body, Get, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, UseGuards, Req, Patch } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('bookings')
 export class BookingsController {
@@ -15,6 +17,9 @@ export class BookingsController {
     return this.bookingsService.create(dto.eventId, req.user.userId);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
   @Get()
   findAll() {
     return this.bookingsService.findAll();
@@ -29,9 +34,8 @@ export class BookingsController {
   
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @Delete(':id')
-  deleteBooking(@Param('id') id: string, @Req() req) {
-    return this.bookingsService.deleteBooking(id, req.user.userId);
+  @Patch(':id/cancel')
+  cancelBooking(@Param('id') id: string, @Req() req) {
+    return this.bookingsService.cancelBooking(id, req.user.userId);
   }
-
 }

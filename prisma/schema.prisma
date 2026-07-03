@@ -21,20 +21,26 @@ model Event {
 }
 
 model Booking {
-  id        String   @id @default(uuid())
-  eventId   String
-  userId    String
+  id                String        @id @default(uuid())
+  eventId           String
+  userId            String
 
-  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event             Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  paymentStatus PaymentStatus @default(PENDING)
-  razorpayOrderId   String? @unique
+  status            BookingStatus @default(ACTIVE)
+  paymentStatus     PaymentStatus @default(PENDING)
+  razorpayOrderId   String?       @unique
   razorpayPaymentId String?
 
-  createdAt DateTime @default(now())
+  createdAt         DateTime      @default(now())
+  cancelledAt       DateTime?
 
-  @@unique([eventId, userId]) // one booking per user per event
+  @@unique([eventId, userId])
+}
+enum BookingStatus {
+  ACTIVE
+  CANCELLED
 }
 
 enum PaymentStatus {
