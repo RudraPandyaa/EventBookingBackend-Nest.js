@@ -20,9 +20,10 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
+    const role = dto.adminSecret === process.env.ADMIN_SECRET_KEY ? 'ADMIN' : 'USER';
 
     const user = await this.prisma.user.create({
-      data: { username: dto.username, email: dto.email, password: hashedPassword },
+      data: { username: dto.username, email: dto.email, password: hashedPassword, role },
     });
 
     return this.issueTokens(user.id, user.email, user.role);
